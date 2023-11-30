@@ -6,6 +6,8 @@
 
 
 
+#This is newest script from Nov 30, 4:07pm
+
 
 #TO RUN: 1) Create two folder: script.directory (where the scripts will be placed) and output.directory (where the GE output will go)
 #        2) Open the GeneEvolve.zip file in your "script.directory" - all scripts must remain in that directory.
