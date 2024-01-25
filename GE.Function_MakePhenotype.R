@@ -128,9 +128,11 @@ effects.cur["D",] <- (d.prelim-corrections$d.mean)*corrections$d.sd
 ### FAMILIAL ENVIRONMENTAL EFFECTS 
 #Vertical Transmission;  transmission of parenting phenotypes to offspring;
 #Note - unlike any of the other variance components, V(F) < 1 (Nov 2023) because it is the actual variance of F contributing to the trait and, alone among the effects, has a beta=1. We force the var(F) to equal its expectation (F) in gen0. Changes in V(F) thereafter are relative to this original variance
+#NOTE: I am not correcting the V(F) in gen0 right now - it is whatever it is
 f.prelim <- males.effects.mate["parenting.phenotype",]*VARIANCE$pvt + females.effects.mate["parenting.phenotype",]*VARIANCE$mvt
 var(f.prelim) # - should be close to what the user specified as "F" in GE-75.R
-if (founder.pop){corrections$f.mean <- mean(f.prelim); corrections$f.sd <- sqrt(VARIANCE$F/var(f.prelim))}
+#if (founder.pop){corrections$f.mean <- mean(f.prelim); corrections$f.sd <- sqrt(VARIANCE$F/var(f.prelim))} #Here, I changed it so that we are not correct VF
+corrections$f.mean <- 0; corrections$f.sd <- 1
 effects.cur["F",] <- (f.prelim-corrections$f.mean)*corrections$f.sd  
 var(effects.cur["F",])
 ################################

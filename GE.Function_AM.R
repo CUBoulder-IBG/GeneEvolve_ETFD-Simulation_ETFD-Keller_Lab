@@ -3,8 +3,12 @@
 ############################################################################
 #ASSORTATIVE MATING FUNCTION
 
-assort.mate <- function(effects.mate,latent.AM,currun,stop.inbreeding=TRUE){
+assort.mate <- function(effects.mate,latent.AM,currun,stop.inbreeding=TRUE,mu.constant=FALSE){
   
+#For debugging:
+#  latent.AM=VAR$latent.AM;currun=1;stop.inbreeding=TRUE;mu.constant=PAR$mu.constant
+  
+
 #probability that each individual marries for generation currun; capped at .95
 prob.marry <- min(.95, rnorm(1,mean=.85,sd=.04))
 size.mate <- ncol(effects.mate)
@@ -41,6 +45,9 @@ females.effects.mate <- females.effects.mate[,order(females.effects.mate["mating
 #as it is (empirical=TRUE), the correlation is *exactly* the AM coefficient each generation; may change to FALSE to make it more realistic
 #nevertheless, there is a stochastic element to it due to the sorting
 AM.mate <- latent.AM[currun]
+
+#This is where we change the correlation, AM.mate, to be what it needs to be to ensure that mu = latent.AM each generation. Basically, if the V(P) increases, the spousal correlation increases as well. Note that latent.AM is the correlation when mu.constant=FALSE, and it is mu when latent.AM=TRUE. However, AM.mate is alway the correlation.
+if(mu.constant){AM.mate <- latent.AM[currun]*sd(males.effects.mate["mating.phenotype",])*sd(females.effects.mate["mating.phenotype",])}
 template.AM.dist <- mvrnormal(n=couples,mu=c(0,0),Sigma=matrix(c(1,AM.mate,AM.mate,1),nrow=2),empirical=TRUE)
 rank.template.males <- rank(template.AM.dist[,1])
 rank.template.females <- rank(template.AM.dist[,2])
