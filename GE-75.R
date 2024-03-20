@@ -6,7 +6,7 @@
 
 
 
-#This is newest script from Nov 30, 4:07pm
+#This is newest script from Jan 25, 2024
 
 
 #TO RUN: 1) Create two folder: script.directory (where the scripts will be placed) and output.directory (where the GE output will go)
@@ -21,35 +21,36 @@
 
 
 
-remove(list=ls()) 
+#remove(list=ls()) #CHANGED FEB 2024
 
 #1 BASIC USER INPUT PARAMETERS (31)      
 #################################################################################################
 
 #BASICS
-script.directory <- "/Users/matthewkeller/GoogleCloud/DriveDocuments/RESEARCH/GeneEvolve/GeneEvolve-ETFD/NEWEST.GE75_ETFD-trial"     # directory where all GeneEvolve R scripts exist - NO SPACES in here!
-output.directory <- "/Users/matthewkeller/GoogleCloud/DriveDocuments/RESEARCH/GeneEvolve/GeneEvolve-ETFD/NEWEST.GE75_ETFD-trial/GE.Output"     # working directory where all GeneEvolve R output will be written - NO SPACES in here!
+script.directory <- "/Users/matthewkeller/GoogleCloud/DriveDocuments/RESEARCH/GeneEvolve/GeneEvolve-ETFD/Final"     # directory where all GeneEvolve R scripts exist - NO SPACES in here!
+output.directory <- "/Users/matthewkeller/GoogleCloud/DriveDocuments/RESEARCH/GeneEvolve/GeneEvolve-ETFD/GE.Output"     # working directory where all GeneEvolve R output will be written - NO SPACES in here!
 
 make.graphics <- "yes"                # do you want to create a full graphical report at end?
 
 #DEMOGRAPHIC DETAILS:
-number.generations <- 7      # number of generations to evolve before pedigree data created
-start.pop.size <- 1000       # breeding population size at start of simulation; should be > 500
+number.generations <- 12      # number of generations to evolve before pedigree data created
+start.pop.size <- 10000       # breeding population size at start of simulation; should be > 500
 pop.growth <- rep(1,number.generations)  #vector of length number.generations that tells how big
     # each generation is relative to the one before it; for no growth: rep(1,number.generations); 
     # for constant 5% growth: rep(1.05,number.generations)               
 
 #MODEL DETAILS:
 thresholds <- FALSE      # EITHER a vector of thresholds corresponding to location on standard normal OR "FALSE", meaning continuous
-am.model <- "II"           # <- "I" is "primary phenotypic assortment" (corr b/w mates due to their choosing similar phenotypes)
+am.model <- "I"           # <- "I" is "primary phenotypic assortment" (corr b/w mates due to their choosing similar phenotypes)
                            # <- "II" is "social homogamy" (corr b/w mates due to correlated environmental factors)
                            # <- "III" convergence - similarity is only through unique environmental factors
                            # <- "IV" is "genetic homogamy" (corr b/w mates due to correlated A, D, and AA genetic factors)
-vt.model <- c(0,0,0,1,1,1,1,1,1,1,0,0,0,0)      #vector of length 14 representing paths from parental P to parenting phenotype
+vt.model <- rep(1,14)      #vector of length 14 representing paths from parental P to parenting phenotype
                            # In order: A, AA, D, F, S, U, MZ, TW, SEX, AGE, A.by.SEX, A.by.AGE, A.by.S, A.by.U). Common options include:
                            # rep(1,14) is the standard parental phenotype to offspring F
                            # c(0,0,0,1,1,1,1,1,1,1,0,0,0,0) is environmental influences of parental phenotype to offspring F
                            # c(0,0,0,1,0,0,0,0,0,0,0,0,0,0) is pure cultural transmission - parental F to offspring F
+mu.constant <- FALSE       #the default in GeneEvolve is for the spousal CORRELATION (see "latent.AM" below) to stay constant over generations. However, extended twin family models (ETFDs) assume that MU is constant and the correlation changes. If you want to make mu constant, change this to "TRUE". If you do this, GeneEvolve will interpret the values of "latent.AM" below to be the mu's rather than the correlations (note that if the phenotype is standardized with V(Y)=1, mu and the correlation are the same).
 
 #DATASET PARAMETERS
 percent.mz <- .44              # % of twins who are MZ (in pedigree creation)
@@ -72,16 +73,17 @@ AA <- .0       # var acct for by AxA (additive-by-additive) epistasis.
 D  <- .0      # var acct for by D (dominance genetic variance)
 
 #Environmental Factors:
-U <- .3        # var acct for by U (unique variance). 
+U <- .15        # var acct for by U (unique variance). 
                # Note: in non-twins, E (eg, the E from ACE models)=U+MZ+T
 MZ <- .0       # var acct for by special MZ twin env (this goes into E for non-mz individuals)
 TW <- .0       # var acct for by special twin env (this goes into E for non-twin individuals)
 S <- .15       # var acct for by S (sibling environment). 
 
 #Vertical Transmission Variance & Path Coefficients
-F <- .15       # this is the var acct for by F in the first generation; it will change thereafter as a function of AM. 
-mat2pat <- 2   # "maternal relative to the paternal VT effect" - this is how much greater the maternal path coefficient from maternal phenotype to F (mvt) is than the paternal path coefficient to F (pvt). E.g., if set to 2, the maternal path coefficient is twice the paternal one (mvt=2pvt). Set to 1 for maternal effect = paternal effect (m=p).
-#Note that VF without AM is expected = tau^2(mvt^2 + pvt^2), where tau^2 is the variance of the parenting phenotype. GeneEvolve internally figures out what the actual maternal and paternal path coefficients need to be (given F, mat2pat, and vt.model) to give V(F)=F for the first generation.
+F <- .30       # this is the var acct for by F in the first generation; it will change thereafter as a function of AM. 
+mat2pat <- 2   # "maternal relative to the paternal VT effect" - this is how much greater the maternal path coefficient from maternal phenotype to F (mvt) is than the paternal path coefficient to F (pvt). E.g., if set to 2, the maternal path coefficient is twice the paternal one (mvt=2pvt). Set to 1 for maternal effect = paternal effect (mvt=pvt).
+#Note that VF without AM is expected = tau^2(mvt^2 + pvt^2), where tau^2 is the variance of the parenting phenotype. GeneEvolve internally figures out what the actual maternal and paternal path coefficients need to be (given F, mat2pat, and vt.model) to give V(F)=F for the first generation, and in such a way that V(F) is stable over time absent AM (with AM, V(F) tends to increase).
+#If users want to input their own specific values of mvt and pvt rather than have GeneEvolve do this for them, simply change mvt and pvt in the final lines under "ADVANCED USER INPUT PARAMETERS" below. The value of F and mat2pat above will be ignored if users set mvt and pvt themselves (in this case, just set F and mat2pat to any real numbers).
 
 
 #Covariates & Moderators
@@ -97,9 +99,8 @@ A.by.S <- .0   # var acct for by interaction bw A & S (sib env).
 A.by.U <- .0   # var acct for by interaction bw A & U (unique env).
 
 #COVARIANCES: (Note: when there are covariances b/w components, total var != sum(variances))
-latent.AM <- rep(.3,number.generations) #VECTOR of length = number.generations; 
-               # corr b/w spouses' latent mating phenotype each gen., as determined by am.model.
-               # NOTE: the actual phenotypic correlation bw spouses is <= to this
+latent.AM <- rep(.4,number.generations) #VECTOR of length = number.generations; 
+               # either the correlation (if mu.constant=FALSE) or the mu (if mu.constant=TRUE) b/w spouses' latent mating phenotype each gen., as determined by am.model.
 A.S.cor  <- .0 # corr b/w A & S - caused by ACTIVE g-e covariance
 A.U.cor <- .0  # corr b/w A & U - caused by ACTIVE g-e covariance
 R.Alevel.Aslope.age <- .0 #corr bw intercept & slope. Should be b/w -1 & 1.
@@ -115,7 +116,6 @@ R.Alevel.Aslope.U <- .0   #corr bw intercept & slope. Should be b/w -1 & 1.
  # WARNING: for scalar interactions, including only interaction var with no main effect var of A
  # will not produce what is desired!
 #################################################################################################
-
 
 
 
@@ -163,6 +163,10 @@ par0 <- sum((par.paths^2)*c(rep(1,3),F,rep(1,10))) #the variance of the latent p
 K <- mat2pat^2 + 1
 pvt <- sqrt(F/(K*par0)) #paternal path coefficient - this will be saved in VAR
 mvt <- pvt*mat2pat #maternal path coefficient - this will be saved in VAR
+
+#OPTIONAL - set pvt and mvt to user-specified values. If set to pvt <- pvt (or mvt <- mvt), this has pvt and mvt set by the F value in section 1 (i.e., it doesn't do anything). If you set pvt and mvt to specific values, this will over-ride the value of both "F" and mat2pat input in section 1
+pvt <- pvt #.2 #change the rightmost "pvt" to any value. 
+mvt <- mvt #.35 #change the rightmost "mvt" to any value. 
 
 ############################################################################
 
@@ -217,7 +221,7 @@ PAR1 <- list(output.directory=output.directory, save.gen.data=save.gen.data,
              range.pop.age=range.pop.age,gene.model=gene.model,
              number.alleles=number.alleles,real.missing=real.missing,
              save.rdata=save.rdata,number.runs=number.runs,continuation=continuation,
-             run.corr=run.corr,rand.parameters=rand.parameters,thresholds=thresholds)
+             run.corr=run.corr,rand.parameters=rand.parameters,thresholds=thresholds,mu.constant=mu.constant)
           
 VAR1 <- list(A=A, AA=AA, D=D,F=F,mvt=mvt, pvt=pvt, S=S, U=U, MZ=MZ, TW=TW, SEX=SEX, AGE=AGE, A.by.SEX=A.by.SEX,
              A.by.AGE=A.by.AGE, A.by.S=A.by.S, A.by.U=A.by.U,latent.AM=latent.AM, A.S.cor=A.S.cor,

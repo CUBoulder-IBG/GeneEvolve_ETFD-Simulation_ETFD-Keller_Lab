@@ -8,14 +8,14 @@
 #ALL <- run.gene.evolve(PAR=PAR1,VAR=VAR1,iter=iteration)
 #PAR=PAR1
 #VAR=VAR1
-#iter=iteration
+#iter=1
 #source("http://www.matthewckeller.com/R.Class/KellerScript3.R") 
 
 
 
 
 
-run.gene.evolve <- function(PAR,VAR,iter){ #CHANGED - remove comment
+run.gene.evolve <- function(PAR,VAR,iter){ 
 
 
 
@@ -215,7 +215,6 @@ females.effects.mate["Subj.ID",] <- TEMP$Subj.ID[(TEMP$size.mate+1):(TEMP$size.m
 
 if (PAR$save.objects=="yes"){effects.neg1 <- cbind(males.effects.mate,females.effects.mate)}
 
-#CHANGED - Stopped here, Nov 21, 2023
 #make gen 0 phenotypes
 phenotype <- make.phenotype(males.effects.mate, females.effects.mate, patgenes, matgenes, TEMP$females.married, TEMP$reltpe,
                             TEMP$children.vector, corrections=list(), founder.pop=TRUE, PARAM=PAR, A.effects.key=a.effects.key,
@@ -325,7 +324,7 @@ if (PAR$save.objects=="yes"){effects.0 <- effects.mate}
 TEMP$header.cols <- nrow(effects.mate)
 
 #assortative mating
-amcur <- assort.mate(effects.mate,VAR$latent.AM,currun,stop.inbreeding=TRUE)
+amcur <- assort.mate(effects.mate,VAR$latent.AM,currun,stop.inbreeding=TRUE,mu.constant=PAR$mu.constant)
 TEMP$females.married <- amcur$females.married
 TEMP$males.married <- amcur$males.married
 males.effects.mate <- amcur$males.effects.mate
@@ -460,7 +459,7 @@ if (PAR$save.objects=="no") {remove(effects.mate);    } #@@@@@CLEANUP
 #6.1 ASSORTATIVE MATING - PARENTS OF SPOUSES
 
 #assortative mating
-amcur <- assort.mate(effects.spouseparents,VAR$latent.AM,currun,stop.inbreeding=TRUE)
+amcur <- assort.mate(effects.spouseparents,VAR$latent.AM,currun,stop.inbreeding=TRUE,mu.constant=PAR$mu.constant)
 TEMP$females.married <- amcur$females.married
 TEMP$males.married <- amcur$males.married
 males.effects.mate <- amcur$males.effects.mate
@@ -475,7 +474,7 @@ write(effects.spouseparents,file=paste("Current.SpouseParents.", currun, sep="")
 write(males.effects.mate,file=paste("Current.BreedingMales.SpousesParents.", currun, sep=""),ncolumns=TEMP$header.cols,append=FALSE)
 write(females.effects.mate,file=paste("Current.BreedingFemales.SpousesParents.", currun, sep=""),ncolumns=TEMP$header.cols,append=FALSE)}
 
-#also, rename these files so that they exist in .RData if PAR$save.objects=="max"
+#also, rename these files so that they exist in .RData if PAR$save.objects=="yes"
 if (PAR$save.objects=="yes"){
 effects.fathers.spouses <- males.effects.mate
 effects.mothers.spouses <- females.effects.mate}
@@ -591,7 +590,7 @@ total <- effects.mate
 #7.1 ASSORTATIVE MATING - PARENTS OF TWINS & TWIN SIBS
 
 #assortative mating
-amcur <- assort.mate(effects.twinparents,VAR$latent.AM,currun,stop.inbreeding=TRUE)
+amcur <- assort.mate(effects.twinparents,VAR$latent.AM,currun,stop.inbreeding=TRUE,mu.constant=PAR$mu.constant)
 TEMP$females.married <- amcur$females.married
 TEMP$males.married <- amcur$males.married
 males.effects.mate <- amcur$males.effects.mate
@@ -751,6 +750,10 @@ if (PAR$save.objects=="no") {remove(phenotype)}
 
 
 
+
+
+
+
 ############################################################################
 #9.4 UPDATE MATRICES THAT TRACK CHANGES OVER TIME - MZ TWINS
 
@@ -871,7 +874,7 @@ twsps <- total[,(total["Relative.type",]<3 & total["female",]==0)] #male MZ & DZ
 effects.mate <- cbind(sps,twsps)
 
 #assortative mating
-amcur <- assort.mate(effects.mate,VAR$latent.AM,currun,stop.inbreeding=TRUE)
+amcur <- assort.mate(effects.mate,VAR$latent.AM,currun,stop.inbreeding=TRUE,mu.constant=PAR$mu.constant)
 TEMP$females.married <- amcur$females.married
 TEMP$males.married <- amcur$males.married
 males.effects.mate <- amcur$males.effects.mate
@@ -997,7 +1000,7 @@ effects.mate <- cbind(sps,twsps)
 if (PAR$save.objects=="no") {remove(sps,twsps)   } #@@@@@CLEANUP
 
 #assortative mating
-amcur <- assort.mate(effects.mate,VAR$latent.AM,currun,stop.inbreeding=TRUE)
+amcur <- assort.mate(effects.mate,VAR$latent.AM,currun,stop.inbreeding=TRUE,mu.constant=PAR$mu.constant)
 TEMP$females.married <- amcur$females.married
 TEMP$males.married <- amcur$males.married
 males.effects.mate <- amcur$males.effects.mate
@@ -1061,9 +1064,7 @@ if (PAR$save.objects=="no") {remove(children.effects)}
 #12.3 CREATE GENERATION CUR PHENOTYPES - FEMALE TWINS CHILDREN (FTC)
 TEMP$reltpe <- 5
 
-phenotype <- make.phenotype(males.effects.mate,females.effects.mate,patgenes,matgenes,TEMP$females.married,TEMP$reltpe,TEMP$children.vector,
-                            corrections=correct, founder.pop=FALSE, PARAM=PAR, A.effects.key=a.effects.key,
-                            D.effects.key=d.effects.key, VARIANCE=VAR, BETA.matrix=beta.matrix) #don't need effects.mate anymore
+phenotype <- make.phenotype(males.effects.mate,females.effects.mate,patgenes,matgenes,TEMP$females.married,TEMP$reltpe,TEMP$children.vector,corrections=correct, founder.pop=FALSE, PARAM=PAR, A.effects.key=a.effects.key,D.effects.key=d.effects.key, VARIANCE=VAR, BETA.matrix=beta.matrix) #don't need effects.mate anymore
 
 effects.mate <- phenotype$effects.mate
 TEMP$size.mate <- phenotype$size.mate
@@ -1162,9 +1163,7 @@ dz.female <- as.matrix(wide.data[wide.data$twintype=="dzf",2:ncol(wide.data)])
 #update track.changes for time repmeas
 TEMP$index <- match(PData.new[,"Spouse.ID"],PData.new[,"Subj.ID"])
 TEMP$cor.spouses <- cor(PData.new[,c("cur.phenotype")],PData.new[TEMP$index,c("cur.phenotype")],use="complete.obs")
-track.changes <- change.tracker(run=PAR$number.generations+7+repmeas,x=track.changes,y=t(as.matrix(PData.new[,1:nrow(total)])),mean.names=TEMP$mean.names,
-                                effects.names=TEMP$names,beta1=TEMP$track.beta,var.names=TEMP$var.names,cov.names=TEMP$cov.names,popsize=nrow(PData.new),
-                                cor.spouses=TEMP$cor.spouses)
+track.changes <- change.tracker(run=PAR$number.generations+7+repmeas,x=track.changes,y=t(as.matrix(PData.new[,1:nrow(total)])),mean.names=TEMP$mean.names,effects.names=TEMP$names,beta1=TEMP$track.beta,var.names=TEMP$var.names,cov.names=TEMP$cov.names,popsize=nrow(PData.new),cor.spouses=TEMP$cor.spouses)
 
 
 #write out this data as well as track.changes for each measurement for each run number
