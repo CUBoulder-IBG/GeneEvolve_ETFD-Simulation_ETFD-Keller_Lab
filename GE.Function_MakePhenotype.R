@@ -134,8 +134,8 @@ f.prelim <- males.effects.mate["parenting.phenotype",]*VARIANCE$pvt + females.ef
 var(f.prelim) # - should be close to what the user specified as "F" in GE-75.R
 #if (founder.pop){corrections$f.mean <- mean(f.prelim); corrections$f.sd <- sqrt(VARIANCE$F/var(f.prelim))} #Here, I changed it so that we are not scaling VF by the mean and sd of VF in gen0
 corrections$f.mean <- 0; corrections$f.sd <- 1
-effects.cur["F",] <- (f.prelim-corrections$f.mean)*corrections$f.sd  
-#effects.cur["F",] <- (f.prelim-mean(f.prelim))*corrections$f.sd  #this ensure that VF always has mean 0 each generation
+#effects.cur["F",] <- (f.prelim-corrections$f.mean)*corrections$f.sd  
+effects.cur["F",] <- (f.prelim-mean(f.prelim))*corrections$f.sd  #this ensure that VF always has mean 0 each generation
 var(effects.cur["F",])
 ################################
 
