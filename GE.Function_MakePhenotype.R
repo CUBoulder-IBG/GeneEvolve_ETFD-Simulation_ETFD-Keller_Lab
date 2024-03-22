@@ -13,8 +13,10 @@
 #females.married <- TEMP$females.married
 #reltpe <- TEMP$reltpe
 #children.vector <- TEMP$children.vector
-#corrections=list()
-#founder.pop=TRUE
+#corrections=list() #OR corrections=correct
+#corrections=correct
+#founder.pop=TRUE  #OR FALSE! Look to see
+#founder.pop=FALSE
 #PARAM=PAR
 #A.effects.key=a.effects.key
 #D.effects.key=d.effects.key
@@ -133,9 +135,9 @@ effects.cur["D",] <- (d.prelim-corrections$d.mean)*corrections$d.sd
 f.prelim <- males.effects.mate["parenting.phenotype",]*VARIANCE$pvt + females.effects.mate["parenting.phenotype",]*VARIANCE$mvt
 var(f.prelim) # - should be close to what the user specified as "F" in GE-75.R
 #if (founder.pop){corrections$f.mean <- mean(f.prelim); corrections$f.sd <- sqrt(VARIANCE$F/var(f.prelim))} #Here, I changed it so that we are not scaling VF by the mean and sd of VF in gen0
-corrections$f.mean <- 0; corrections$f.sd <- 1
-#effects.cur["F",] <- (f.prelim-corrections$f.mean)*corrections$f.sd  
-effects.cur["F",] <- (f.prelim-mean(f.prelim))*corrections$f.sd  #this ensure that VF always has mean 0 each generation
+corrections$f.mean <- 0; corrections$f.sd <- 1 #the corrections$f.mean is no longer used anywhere as of March 21, 2024
+#effects.cur["F",] <- (f.prelim-corrections$f.mean)*corrections$f.sd  #This commented out on March 21,2024
+effects.cur["F",] <- (f.prelim-mean(f.prelim))*corrections$f.sd  #this ensure that VF always has mean 0 each generation; CHANGED on March 21, 2024
 var(effects.cur["F",])
 ################################
 
@@ -319,40 +321,55 @@ effects.cur["A.by.U",] <- effects.cur["A.slopes.U",]*u.prelim
 
 
 ### CREATE 3 PHENOTYPES (actual phenotype, mating phenotype, and parenting phenotype)
+
+#NOTE: This is a reversion (as of March 21, 2024) of the old way I used to create phenotypes. It does not scale the phenotypes relative to what they were in gen0. I reverted to this because the scaling was forcing the variance of the parental (or mating) phenotype to be what was specified in "F" in the GE-75.R script, instead of allowing it to drift to lower or higher values, as it naturally should.
+effects.cur["cur.phenotype",] <-    BETA.matrix %*%  effects.cur[PARAM$varnames,] #Old way
+var(effects.cur["cur.phenotype",]) #should be the sum of all variances specified by user that make up the phenotype
+
+effects.cur["mating.phenotype",]  <- (BETA.matrix*PARAM$am.multiplier) %*% (effects.cur[PARAM$varnames.M,]) #Old way
+var(effects.cur["mating.phenotype",]) #should be the sum of all variances specified by user that make up the mating phenotype
+
+effects.cur["parenting.phenotype",] <- (BETA.matrix*PARAM$vt.model) %*% (effects.cur[PARAM$varnames.M,])
+var(effects.cur["parenting.phenotype",]) #should be the sum of all variances specified by user that make up the mating phenotype
+
+
+
+#NOTE: all the below is now commented out. To go back to the newer way, uncomment these and comment the ones above.
+
 #Note - The way you standardize assumes all effects are uncorrelated. That is fine for effects that become correlated naturally due to AM or VT because we are concerned with the base population. However, the 4 correlations between intercepts and slopes in GE-75.R will NOT be accounted for and they should, so the way I'm doing it now (as of Nov 2023) will lead to variances != what you think they should be at the start of the simulation when there are these correlated effects. Essentially, this simulation assumes ALL effects are uncorrelated in the base population.
 
 #Note 2 - this also means that the phenotypes will NOT exactly equal the sum of all the effects - the phenotypes will be correlated at +1.0 with them, but they'll differ slightly, and their mean and var will differ slightly
 
 
 #Note - We want the phenotype to start with mean=0 & var=its expected variance=par0 in gen0; we use this as the baseline thereafter
-pheno.prelim <- as.vector(BETA.matrix %*% (effects.cur[PARAM$varnames,]))
-var(pheno.prelim) #should be close to sum of all variances specified by user that make up the parenting phenotype
-(phen0 <- sum((BETA.matrix^2)*c(rep(1,3),VARIANCE$F,rep(1,10)))) #expected variance of phenotype assuming all effects are uncorrelated
-if (founder.pop){corrections$pheno.mean <- mean(pheno.prelim); corrections$pheno.sd <- sqrt(phen0/var(pheno.prelim))}
-effects.cur["cur.phenotype",] <- (pheno.prelim-corrections$pheno.mean)*corrections$pheno.sd  
-var(effects.cur["cur.phenotype",]) #should be the sum of all variances specified by user that make up the phenotype
-#effects.cur["cur.phenotype",] <-    BETA.matrix %*%  effects.cur[PARAM$varnames,] #Old way
+#pheno.prelim <- as.vector(BETA.matrix %*% (effects.cur[PARAM$varnames,]))
+#var(pheno.prelim) #should be close to sum of all variances specified by user that make up the parenting phenotype
+#(phen0 <- sum((BETA.matrix^2)*c(rep(1,3),VARIANCE$F,rep(1,10)))) #expected variance of phenotype assuming all effects are uncorrelated
+#if (founder.pop){corrections$pheno.mean <- mean(pheno.prelim); corrections$pheno.sd <- sqrt(phen0/var(pheno.prelim))}
+#effects.cur["cur.phenotype",] <- (pheno.prelim-corrections$pheno.mean)*corrections$pheno.sd  
+#var(effects.cur["cur.phenotype",]) #should be the sum of all variances specified by user that make up the phenotype
 
 
 #Note - We want the mating phenotype to start with mean=0 & var=its expected variance=par0 in gen0; we use this as the baseline thereafter. We use varnames.M because these are the values of Age & AxAge at the time the two spouses married
-(am.paths <- (BETA.matrix*PARAM$am.multiplier))
-mating.prelim <- as.vector(am.paths %*% (effects.cur[PARAM$varnames.M,]))
-var(mating.prelim) #should be close to sum of all variances specified by user that make up the parenting phenotype
-(mating0 <- sum((am.paths^2)*c(rep(1,3),VARIANCE$F,rep(1,10)))) #expected variance of mating phenotype assuming all effects are uncorrelated
-if (founder.pop){corrections$mating.mean <- mean(mating.prelim); corrections$mating.sd <- sqrt(mating0/var(mating.prelim))}
-effects.cur["mating.phenotype",] <- (mating.prelim-corrections$mating.mean)*corrections$mating.sd  
-var(effects.cur["mating.phenotype",]) #should be the sum of all variances specified by user that make up the mating phenotype
-#effects.cur["mating.phenotype",]  <- (BETA.matrix*PARAM$am.multiplier) %*% (effects.cur[PARAM$varnames.M,]) #Old way
+#(am.paths <- (BETA.matrix*PARAM$am.multiplier))
+#mating.prelim <- as.vector(am.paths %*% (effects.cur[PARAM$varnames.M,]))
+#var(mating.prelim) #should be close to sum of all variances specified by user that make up the parenting phenotype
+#(mating0 <- sum((am.paths^2)*c(rep(1,3),VARIANCE$F,rep(1,10)))) #expected variance of mating phenotype assuming all effects are uncorrelated
+#if (founder.pop){corrections$mating.mean <- mean(mating.prelim); corrections$mating.sd <- sqrt(mating0/var(mating.prelim))}
+#effects.cur["mating.phenotype",] <- (mating.prelim-corrections$mating.mean)*corrections$mating.sd  
+#var(effects.cur["mating.phenotype",]) #should be the sum of all variances specified by user that make up the mating phenotype
 
+
+#NOTE - the problem with VF not halving when pvt = mvt = .5 is probably here; does this keep the parenting phenotype the same each gen?
 
 #Note - We want parenting phenotype to start with mean=0 & var=its expected variance=par0 in gen0; we use this mean & var of the parenting phenotype in gen0 as the baseline thereafter. We use varnames.M because these are the values of Age & AxAge at the time the two spouses married, which would be closer to when they have offspring and pass down their parental traits
-(par.paths <- (BETA.matrix*PARAM$vt.model))
-parenting.prelim <- as.vector(par.paths %*% (effects.cur[PARAM$varnames.M,]))
-var(parenting.prelim) #should be close to sum of all variances specified by user that make up the parenting phenotype
-(par0 <- sum((par.paths^2)*c(rep(1,3),VARIANCE$F,rep(1,10)))) #expected variance of parenting phenotype assuming all effects are uncorrelated
-if (founder.pop){corrections$parenting.mean <- mean(parenting.prelim); corrections$parenting.sd <- sqrt(par0/var(parenting.prelim))}
-effects.cur["parenting.phenotype",] <- (parenting.prelim-corrections$parenting.mean)*corrections$parenting.sd  
-var(effects.cur["parenting.phenotype",]) #should be the sum of all variances specified by user that make up the mating phenotype
+#(par.paths <- (BETA.matrix*PARAM$vt.model))
+#parenting.prelim <- as.vector(par.paths %*% (effects.cur[PARAM$varnames.M,]))
+#var(parenting.prelim) #should be close to sum of all variances specified by user that make up the parenting phenotype
+#(par0 <- sum((par.paths^2)*c(rep(1,3),VARIANCE$F,rep(1,10)))) #expected variance of parenting phenotype assuming all effects are uncorrelated
+#if (founder.pop){corrections$parenting.mean <- mean(parenting.prelim); corrections$parenting.sd <- sqrt(par0/var(parenting.prelim))}
+#effects.cur["parenting.phenotype",] <- (parenting.prelim-corrections$parenting.mean)*corrections$parenting.sd  
+#var(effects.cur["parenting.phenotype",]) #should be the sum of all variances specified by user that make up the mating phenotype
 
 ################################
 

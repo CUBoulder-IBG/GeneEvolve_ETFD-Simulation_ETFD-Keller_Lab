@@ -222,7 +222,7 @@ phenotype <- make.phenotype(males.effects.mate, females.effects.mate, patgenes, 
 
 effects.mate <- phenotype$effects.mate
 TEMP$size.mate <- phenotype$size.mate
-correct <- phenotype$corrections
+correct <- phenotype$corrections #THIS is where we set the correction factor (mean & sd of each factor) for the rest of the simulation
 
 if (PAR$save.objects == "no") {remove(phenotype)}
 ############################################################################
