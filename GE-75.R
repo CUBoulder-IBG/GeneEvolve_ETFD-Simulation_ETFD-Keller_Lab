@@ -7,7 +7,7 @@
 
 
 #This is newest script from March 20, 2024
-
+#Updated April 18 to allow for any type of latent variable AM (and any type of latent variable parenting, from previous version)
 
 #TO RUN: 1) Create two folder: script.directory (where the scripts will be placed) and output.directory (where the GE output will go)
 #        2) Open the GeneEvolve.zip file in your "script.directory" - all scripts must remain in that directory.
@@ -27,24 +27,25 @@ remove(list=ls()) #CHANGED MAR 2024
 #################################################################################################
 
 #BASICS
-script.directory <- "/Users/matthewkeller/GoogleCloud/DriveDocuments/RESEARCH/GeneEvolve/GeneEvolve-ETFD/old/GE75-March2023"     # directory where all GeneEvolve R scripts exist - NO SPACES in here!
+script.directory <- "/Users/matthewkeller/GoogleCloud/DriveDocuments/RESEARCH/GeneEvolve/GeneEvolve-ETFD/Working"     # directory where all GeneEvolve R scripts exist - NO SPACES in here!
 output.directory <- "/Users/matthewkeller/GoogleCloud/DriveDocuments/RESEARCH/GeneEvolve/GeneEvolve-ETFD/GE.Output"     # working directory where all GeneEvolve R output will be written - NO SPACES in here!
 
 make.graphics <- "yes"                # do you want to create a full graphical report at end?
 
 #DEMOGRAPHIC DETAILS:
-number.generations <- 20      # number of generations to evolve before pedigree data created
-start.pop.size <- 20000       # breeding population size at start of simulation; should be > 500
+number.generations <- 10      # number of generations to evolve before pedigree data created
+start.pop.size <- 10000       # breeding population size at start of simulation; should be > 500
 pop.growth <- rep(1,number.generations)  #vector of length number.generations that tells how big
     # each generation is relative to the one before it; for no growth: rep(1,number.generations); 
     # for constant 5% growth: rep(1.05,number.generations)               
 
 #MODEL DETAILS:
 thresholds <- FALSE      # EITHER a vector of thresholds corresponding to location on standard normal OR "FALSE", meaning continuous
-am.model <- "I"           # <- "I" is "primary phenotypic assortment" (corr b/w mates due to their choosing similar phenotypes)
-                           # <- "II" is "social homogamy" (corr b/w mates due to correlated environmental factors)
-                           # <- "III" convergence - similarity is only through unique environmental factors
-                           # <- "IV" is "genetic homogamy" (corr b/w mates due to correlated A, D, and AA genetic factors)
+am.model <- c(.5,.5,.5,1,1,1,1,1,1,1,0,0,0,0)     #vector of length 14 representing paths from parental P to mating phenotype
+                          # In order: A, AA, D, F, S, U, MZ, TW, SEX, AGE, A.by.SEX, A.by.AGE, A.by.S, A.by.U). Common options include:
+                          # rep(1,14) is the standard primary phenotypic AM
+                          # c(0,0,0,1,1,1,1,1,1,1,0,0,0,0) is social homogamy
+                          # c(0,0,0,1,0,0,0,0,0,0,0,0,0,0) is pure cultural homogamy
 vt.model <- rep(1,14)     #vector of length 14 representing paths from parental P to parenting phenotype
                            # In order: A, AA, D, F, S, U, MZ, TW, SEX, AGE, A.by.SEX, A.by.AGE, A.by.S, A.by.U). Common options include:
                            # rep(1,14) is the standard parental phenotype to offspring F

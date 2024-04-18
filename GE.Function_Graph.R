@@ -52,9 +52,9 @@ am.paths <- bmat*PARAMS$am.multiplier
 ph.tf <- rep(FALSE,length(PARAMS$am.multiplier))
 am.tf <- rep(FALSE,length(PARAMS$am.multiplier))
 vt.tf <- rep(FALSE,length(PARAMS$vt.model))
-ph.tf[bmat==1] <- TRUE
-am.tf[am.paths==1] <- TRUE
-vt.tf[vt.paths==1] <- TRUE
+ph.tf[bmat!=0] <- TRUE
+am.tf[am.paths!=0] <- TRUE
+vt.tf[vt.paths!=0] <- TRUE
 
 ph.variables <- PARAMS$varnames[ph.tf]
 am.variables <- PARAMS$varnames[am.tf]

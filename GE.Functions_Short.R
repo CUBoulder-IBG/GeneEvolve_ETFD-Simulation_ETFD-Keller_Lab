@@ -149,7 +149,7 @@ alter.parameters <- function(P,V,max=1){
                    tot <- V$A+V$D+V$F+V$S; V$A <- round(V$A/tot,3);V$D <- round(V$D/tot,3);V$F <- round(V$F/tot,3); V$S <- round(V$S/tot,3)}
 
     if (P$rand.parameters =="AM.mod"){
-    if (runif(1)<.5) P$am.model <- "I" else P$am.model <- "II"}}
+    if (runif(1)<.5) P$am.model <- rep(1,14) else P$am.model <- c(0,0,0,1,1,1,1,1,1,1,0,0,0,0)}}
 
    return(BOTH=list(VAR=V,PAR=P))}
 

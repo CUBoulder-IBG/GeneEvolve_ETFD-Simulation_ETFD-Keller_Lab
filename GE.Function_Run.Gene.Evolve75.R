@@ -89,10 +89,12 @@ PAR$number.parameters <- dim(beta.matrix)[2]
 PAR$varnames.M <- c("A","AA","D","F","S","U","MZ","TW","SEX","AGE.M","A.by.SEX","A.by.AGE.M","A.by.S","A.by.U")
 
 #create multiplier vector that will create the phenotype on which spouses choose each other
-if (PAR$am.model=="I") {PAR$am.multiplier <- rep(1,PAR$number.parameters)}   #phenotypic homogamy
-if (PAR$am.model=="II") {PAR$am.multiplier <- c(0,0,0,1,1,1,1,1,0,0,0,0,0,0)}  #social homogamy - all environmental factors
-if (PAR$am.model=="III") {PAR$am.multiplier <- c(0,0,0,0,0,1,0,0,0,0,0,0,0,0)} #convergence - only through unique environmental factors
-if (PAR$am.model=="IV") {PAR$am.multiplier <- c(1,1,1,0,0,0,0,0,0,0,0,0,0,0)} #genetic homogamy - only through genetic factors
+#if (PAR$am.model=="I") {PAR$am.multiplier <- rep(1,PAR$number.parameters)}   #phenotypic homogamy
+#if (PAR$am.model=="II") {PAR$am.multiplier <- c(0,0,0,1,1,1,1,1,0,0,0,0,0,0)}  #social homogamy - all environmental factors
+#if (PAR$am.model=="III") {PAR$am.multiplier <- c(0,0,0,0,0,1,0,0,0,0,0,0,0,0)} #convergence - only through unique environmental factors
+#if (PAR$am.model=="IV") {PAR$am.multiplier <- c(1,1,1,0,0,0,0,0,0,0,0,0,0,0)} #genetic homogamy - only through genetic factors
+PAR$am.multiplier <- PAR$am.model #here, we just make the multipler the same as am.model as a quick fix to allow for any type of AM
+
 
 #make expected population sizes
 PAR$popsize <- vector(length=PAR$number.generations+1)
@@ -118,10 +120,13 @@ parameters <- matrix(0,nrow=length(TEMP$row.par),ncol=length(TEMP$col.par))
 rownames(parameters) <- TEMP$row.par
 colnames(parameters) <- TEMP$col.par
 
-if (PAR$am.model=="I"){parameters["expec.cor.sps",] <- VAR$latent.AM} #CHANGED - REMOVED am.mod
-if (PAR$am.model=="II"){parameters["expec.cor.sps",] <- VAR$latent.AM*(VAR$F+VAR$S+VAR$U+VAR$TW+VAR$MZ)/VAR$TOTAL}#CHANGED - REMOVED am.mod
-if (PAR$am.model=="III"){parameters["expec.cor.sps",] <- VAR$latent.AM*(VAR$U)/VAR$TOTAL}#CHANGED - REMOVED am.mod
-if (PAR$am.model=="IV"){parameters["expec.cor.sps",] <- VAR$latent.AM*(VAR$A+VAR$D+VAR$AA)/VAR$TOTAL}#CHANGED - REMOVED am.mod
+#if (PAR$am.model=="I"){parameters["expec.cor.sps",] <- VAR$latent.AM} #CHANGED - REMOVED am.mod
+#if (PAR$am.model=="II"){parameters["expec.cor.sps",] <- VAR$latent.AM*(VAR$F+VAR$S+VAR$U+VAR$TW+VAR$MZ)/VAR$TOTAL}#CHANGED - REMOVED am.mod
+#if (PAR$am.model=="III"){parameters["expec.cor.sps",] <- VAR$latent.AM*(VAR$U)/VAR$TOTAL}#CHANGED - REMOVED am.mod
+#if (PAR$am.model=="IV"){parameters["expec.cor.sps",] <- VAR$latent.AM*(VAR$A+VAR$D+VAR$AA)/VAR$TOTAL}#CHANGED - REMOVED am.mod
+am.beta.matrix <-matrix(c(A,AA,D,F,S,U,MZ,TW,SEX,AGE,A.by.SEX,A.by.AGE,A.by.S,A.by.U),nrow=1) #CHANGED 4/18 - does it work?
+parameters["expec.cor.sps",] <- VAR$latent.AM*sum(am.beta.matrix*am.model)/VAR$TOTAL #CHANGED 4/18 - does it work?
+
 
 parameters["expected.pop",] <- PAR$popsize
 parameters[1:(nrow(parameters)-2),] <- matrix(rep(c(var.matrix,VAR$A.S.cor,VAR$A.U.cor,PAR$sibling.age.cor,VAR$R.Alevel.Aslope.sex,VAR$R.Alevel.Aslope.age,VAR$R.Alevel.Aslope.S,VAR$R.Alevel.Aslope.U,PAR$number.genes),each=PAR$number.generations),nrow=nrow(parameters)-2,ncol=ncol(parameters),byrow=TRUE)
